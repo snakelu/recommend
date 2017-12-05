@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.roman.recommend.mapper.ItemScoreMapper">
+
+	<resultMap type="com.roman.recommend.entity.ItemScore" id="itemScoreMap">
+		<id property="imei" column="imei"></id>
+		<result property="userId" column="user_id" />  
+	    <result property="itemId" column="item_id" />  
+	    <result property="score" column="score" />  
+	</resultMap>
+	
+	<select id="selectByImei" parameterType="java.lang.String" resultMap="itemScoreMap">
+		select item_id,score from rm_item_score where imei = #{imei}
+	</select>
+	
+	<select id="sumScoreByImei" parameterType="java.lang.String" resultType="double">
+		select sum(score) from rm_item_score where imei = #{imei}
+	</select>
+	
+	<select id="selectByUserId" parameterType="java.lang.String" resultMap="itemScoreMap">
+		select item_id,score from rm_item_score where user_id = #{userId}
+	</select>
+	
+	<select id="sumScoreByUserId" parameterType="java.lang.String" resultType="double">
+		select sum(score) from rm_item_score where user_id = #{userId}
+	</select>
+	
+	<select id="selectByItemId" parameterType="java.lang.String" resultMap="itemScoreMap">
+		select imei,item_id,score from rm_item_score where item_id = #{itemId}
+	</select>
+	
+	<select id="selectInItemIds" parameterType="java.util.List" resultMap="itemScoreMap">
+		select imei,user_id,item_id,score from rm_item_score where item_id in
+		<foreach collection="itemIds" item="v" index="index" open="(" separator="," close=")">
+            #{v}
+        </foreach>
+	</select>
+	
+	<select id="selectNotInItemIds" resultMap="itemScoreMap">
+		select item_id,score from rm_item_score where imei = #{imei} 
+		and item_id not in
+		<foreach collection="itemIds" item="v" index="index" open="(" separator="," close=")">
+            #{v}
+        </foreach>
+	</select>
+	
+	<select id="select" resultMap="itemScoreMap">
+		select * from rm_item_score where imei = #{imei} and item_id = #{itemId}
+	</select>
+	
+	<select id="selectTop3TagByImei" parameterType="java.lang.String" resultType="java.lang.String">
+		select ri.item_tag from rm_item_score rs LEFT JOIN
+		rm_simple_item ri on rs.item_id = ri.item_id 
+		where rs.imei = #{imei} GROUP BY ri.item_tag order by sum(score) desc limit 3
+	</select>
+	
+    <insert id="insert" parameterType="com.roman.recommend.entity.ItemScore">
+        insert into rm_item_score
+        (
+        	imei,
+        	user_id,
+        	item_id,
+        	score
+        )
+        values
+        (
+        	#{imei},
+        	#{userId},
+        	#{itemId},
+        	#{score}
+        )
+    </insert>
+    
+    <update id="update" parameterType="com.roman.recommend.entity.ItemScore">
+    	update rm_item_score set score = score + #{score} 
+    	where imei = #{imei} and item_id = #{itemId}
+    </update>
+    
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into rm_item_score
+        (
+        	imei,
+        	user_id,
+        	item_id,
+        	score
+        )
+        values
+        <foreach collection="userActions" item="v" index="index" separator=",">
+            (#{v.imei},
+        	#{v.userId},
+        	#{v.itemId},
+        	#{v.score})
+        </foreach>
+    </insert>
+    
+    <delete id="deleteAll">
+    	delete from rm_item_score;
+    </delete>
+</mapper>

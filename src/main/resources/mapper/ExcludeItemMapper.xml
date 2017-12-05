@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.roman.recommend.mapper.ExcludeItemMapper">
+
+	<select id="selectByImei" parameterType="java.lang.String" resultType="java.lang.String">
+		select item_id from rm_exclude_item where imei = #{imei}
+	</select>
+	
+	<select id="selectByUserId" parameterType="java.lang.String" resultType="java.lang.String">
+		select item_id from rm_exclude_item where userId = #{userId}
+	</select>
+	
+	<insert id="batchInsert" parameterType="java.util.List">
+    	insert into rm_exclude_item
+    	(
+    		imei,
+    		user_id,
+    		item_id
+    	) values 
+    	<foreach collection="recommendList" item="v" index="index" separator=",">
+            (#{imei},
+            #{userId},
+            #{v.itemId})
+        </foreach>
+    </insert>
+    
+    <delete id="deleteByImei" parameterType="java.lang.String">
+    	delete from rm_exclude_item where imei = #{imei}
+    </delete>
+    
+</mapper>

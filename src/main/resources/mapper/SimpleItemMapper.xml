@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.roman.recommend.mapper.SimpleItemMapper">
+
+    <insert id="insert" parameterType="com.roman.recommend.entity.Item">
+        insert into rm_simple_item
+        (
+        	item_id,
+        	item_tag,
+        	item_modify_time
+        )
+        values
+        (
+        	#{itemId},
+        	#{itemTag},
+        	#{itemModifyTime}
+        )
+    </insert>
+    
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into rm_item
+        (
+        	item_id,
+        	item_tag,
+        	item_modify_time
+        )
+        values
+        <foreach collection="simpleItems" item="v" index="index" separator=",">
+            (#{v.itemId},
+        	#{v.itemTag},
+        	#{v.itemModifyTime})
+        </foreach>
+    </insert>
+    
+    <select id="select" resultType="java.lang.String">
+    	select DISTINCT(item_id) from rm_simple_item 
+    	where item_tag = #{itemTag} order by item_modify_time desc limit #{start},#{size}
+    </select>
+    
+    <select id="selectByList" parameterType="java.util.List" resultType="java.lang.String">
+    	select item_id from rm_simple_item where item_tag in
+    	<foreach collection="itemTags" item="v" index="index" open="(" separator="," close=")">
+            #{v}
+        </foreach>
+    </select>
+    
+    <select id="selectRecentItem" parameterType="int" resultType="java.lang.String">
+    	select item_id from rm_simple_item order by item_modify_time desc limit #{size}
+    </select>
+    
+    <delete id="delete" parameterType="java.util.List">
+    	delete from rm_simple_item where item_id = #{itemId}
+    </delete>
+    
+    <delete id="batchDelete" parameterType="java.util.List">
+    	delete from rm_simple_item where item_id in
+    	<foreach collection="ids" item="v" index="index" open="(" separator="," close=")">
+            #{v}
+        </foreach>
+    </delete>
+    
+    <delete id="deleteAll">
+    	delete from rm_simple_item;
+    </delete>
+</mapper>

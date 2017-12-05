@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.roman.recommend.mapper.UserActionMapper">
+
+	<resultMap type="com.roman.recommend.entity.UserAction" id="userActionMap">  
+	    <id property="imei" column="imei" />
+	    <result property="itemId" column="item_id" />
+	    <result property="actionType" column="action_type" />
+	</resultMap>
+	
+	<select id="selectByImei" parameterType="java.lang.String" resultMap="userActionMap">
+		select imei,item_id,action_type from rm_user_action where imei = #{imei}
+	</select>
+	
+	<select id="selectByUserId" parameterType="java.lang.String" resultMap="userActionMap">
+		select imei,item_id,action_type from rm_user_action where user_id = #{userId}
+	</select>
+
+    <insert id="insert" parameterType="com.roman.recommend.entity.UserAction">
+        insert into rm_user_action
+        (
+        	imei,
+        	user_id,
+        	item_id,
+        	action_type,
+        	rec_request_id,
+        	action_time,
+        	ext
+        )
+        values
+        (
+        	#{imei},
+        	#{userId},
+        	#{itemId},
+        	#{actionType},
+        	#{recRequestId},
+        	#{actionTime},
+        	#{ext}
+        )
+    </insert>
+    
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into rm_user_action
+        (
+        	imei,
+        	user_id,
+        	item_id,
+        	action_type,
+        	rec_request_id,
+        	action_time,
+        	ext
+        )
+        values
+        <foreach collection="userActions" item="v" index="index" separator=",">
+            (#{v.imei},
+        	#{v.userId},
+        	#{v.itemId},
+        	#{v.actionType},
+        	#{v.recRequestId},
+        	#{v.actionTime},
+        	#{v.ext})
+        </foreach>
+    </insert>
+    
+    <delete id="deleteAll">
+    	delete from rm_user_action;
+    </delete>
+</mapper>

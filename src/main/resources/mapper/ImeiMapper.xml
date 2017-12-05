@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.roman.recommend.mapper.ImeiMapper">
+
+	<select id="select" parameterType="java.lang.String" resultType="long">
+		select id from rm_imei where imei = #{imei}
+	</select>
+	
+	<select id="selectImeis" parameterType="java.util.List" resultType="java.lang.String">
+		select imei from rm_imei where imei in 
+		<foreach collection="imeiList" item="v" index="index" open="(" separator="," close=")">
+            #{v}
+        </foreach>
+	</select>
+	
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="java.lang.String">
+    	insert into rm_imei
+    	(
+    		imei
+    	) values 
+    	(
+    		#{imei}
+    	)
+    </insert>
+	
+	<insert id="batchInsert" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.List">
+    	insert into rm_imei
+    	(
+    		imei
+    	) values 
+    	<foreach collection="imeiList" item="v" index="index" separator=",">
+            (#{v})
+        </foreach>
+    </insert>
+</mapper>

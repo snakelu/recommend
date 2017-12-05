@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.roman.recommend.mapper.ItemMapper">
+
+    <insert id="insert" parameterType="com.roman.recommend.entity.Item">
+        insert into rm_item
+        (
+        	item_id,
+        	title,
+        	cate_id,
+        	item_tags,
+        	item_modify_time
+        )
+        values
+        (
+        	#{itemId},
+        	#{title},
+        	#{cateId},
+        	#{itemTags},
+        	#{itemModifyTime}
+        )
+    </insert>
+    
+    <update id="update" parameterType="com.roman.recommend.entity.Item">
+    	update rm_item
+    	<set>
+    		<if test="title != null">
+    			title = #{title},
+    		</if>
+    		<if test="cateId != null">
+    			cate_id = #{cateId},
+    		</if>
+    		<if test="itemTags != null">
+    			item_tags = #{itemTags},
+    		</if>
+    		<if test="itemModifyTime != null">
+    			item_modify_time = #{itemModifyTime},
+    		</if>
+    	</set>
+    	where item_id = #{itemId}
+    </update>
+    
+    <delete id="delete" parameterType="java.util.List">
+    	delete from rm_item where item_id = #{itemId}
+    </delete>
+    
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into rm_item
+        (
+        	item_id,
+        	title,
+        	cate_id,
+        	item_tags,
+        	item_modify_time
+        )
+        values
+        <foreach collection="items" item="v" index="index" separator=",">
+            (#{v.itemId},
+        	#{v.title},
+        	#{v.cateId},
+        	#{v.itemTags},
+        	#{v.itemModifyTime})
+        </foreach>
+    </insert>
+    
+    <delete id="batchDelete" parameterType="java.util.List">
+    	delete from rm_item where item_id in
+    	<foreach collection="ids" item="v" index="index" open="(" separator="," close=")">
+            #{v}
+        </foreach>
+    </delete>
+    
+    <delete id="deleteAll">
+    	delete from rm_item;
+    </delete>
+</mapper>
