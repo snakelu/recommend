@@ -4,6 +4,13 @@ CREATE TABLE `rm_action_score` (
   `action_score` double DEFAULT NULL,
   PRIMARY KEY (`action_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+INSERT INTO `rm_action_score` VALUES ('1', '0.5');
+INSERT INTO `rm_action_score` VALUES ('2', '2');
+INSERT INTO `rm_action_score` VALUES ('3', '1.5');
+INSERT INTO `rm_action_score` VALUES ('4', '1');
+INSERT INTO `rm_action_score` VALUES ('5', '1');
+INSERT INTO `rm_action_score` VALUES ('6', '1');
+INSERT INTO `rm_action_score` VALUES ('7', '3');
 
 drop table if exists rm_common_config;
 CREATE TABLE `rm_common_config` (
@@ -11,6 +18,7 @@ CREATE TABLE `rm_common_config` (
   `config_value` varchar(16) DEFAULT NULL COMMENT '配置值',
   PRIMARY KEY (`config_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+INSERT INTO `rm_common_config` VALUES ('add_action_count', '100');
 
 drop table if exists rm_exclude_item;
 CREATE TABLE `rm_exclude_item` (
