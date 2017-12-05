@@ -268,13 +268,14 @@ public class RecommendService {
 	/*
 	 * 通过用户行为中最喜爱的分类，退化搜索补充推荐结果
 	 */
-	private void fillRecommendList(String imei, List<ItemScore> recommendList, int size, List<String> excludeItemIds) {
+	private void fillRecommendList(String imei, List<ItemScore> recommendList, int count, List<String> excludeItemIds) {
 		// 查询用户最喜爱的3个标签，有的用户可能没有3个
 		List<String> favoriteTags = itemScoreMapper.selectTop3TagByImei(imei);
 		int start = 0;
+		int size = count < 8 ? 8 : count;
 		int tagIndex = 0;
 		if (!CollectionUtils.isEmpty(favoriteTags) && null != favoriteTags.get(0)) {
-			while (recommendList.size() < size) {
+			while (recommendList.size() < count) {
 				// 根据最喜爱的标签查询活动，按照发布时间倒序排列
 				List<String> itemIds = simpleItemMapper.select(favoriteTags.get(tagIndex), start, size);
 				if (!CollectionUtils.isEmpty(itemIds)) {
@@ -285,7 +286,7 @@ public class RecommendService {
 							itemScore.setItemId(itemId);
 							recommendList.add(itemScore);
 							// 推荐列表达到数量，直接返回
-							if (recommendList.size() == size) {
+							if (recommendList.size() == count) {
 								return;
 							}
 						}
@@ -302,6 +303,7 @@ public class RecommendService {
 				}
 				// 查询下一批size的活动
 				start += size;
+				size = size << 1;
 			}
 		} else {
 			// 用户没有喜欢的标签（冷启动），按照发布时间顺序，查询最新的活动给用户
