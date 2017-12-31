@@ -12,6 +12,7 @@ import org.apache.mahout.cf.taste.model.JDBCDataModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
@@ -21,6 +22,7 @@ import com.roman.recommend.mapper.ExcludeItemMapper;
 import com.roman.recommend.mapper.ImeiMapper;
 import com.roman.recommend.mapper.ItemScoreMapper;
 import com.roman.recommend.mapper.SimpleItemMapper;
+import com.roman.recommend.mapper.UserActionMapper;
 import com.roman.recommend.model.Response;
 import com.roman.recommend.model.utils.CommonConstants;
 import com.roman.recommend.utils.ItemCfUtil;
@@ -65,6 +67,9 @@ public class RecommendService {
 	@Autowired
 	private CommonConfigMapper commonConfigMapper;
 
+	@Autowired
+	private UserActionMapper userActionMapper;
+
 	/**
 	 * 基于item推荐，通过推荐引擎获取推荐结果，排除已经推荐过的，不够的通过退化搜索补充
 	 * 
@@ -75,10 +80,16 @@ public class RecommendService {
 	 * @return 推荐结果
 	 * @throws Exception
 	 */
+	@Transactional
 	public Response<List<ItemScore>> getRecommendByItem(String imei, String userId, int size, String exclude,
 			Integer isExclude) throws Exception {
-		List<ItemScore> recommendList = new ArrayList<ItemScore>();
 		Long imeiId = imeiMapper.select(imei);
+		if (imeiId == null) {
+			// imeiId为空认为是新用户
+			imeiMapper.insert(imei);
+			return new Response<List<ItemScore>>(userActionMapper.topItemScore(size));
+		}
+		List<ItemScore> recommendList = new ArrayList<ItemScore>();
 		if (isExclude == null || isExclude.intValue() == 0) {
 			excludeItemMapper.deleteByImei(imei);
 		}
@@ -115,6 +126,7 @@ public class RecommendService {
 	 * @return 推荐结果
 	 * @throws Exception
 	 */
+	@Transactional
 	public Response<List<ItemScore>> getRecommendByUser(String imei, String userId, int size, String exclude,
 			Integer isExclude) throws Exception {
 		List<ItemScore> recommendList = new ArrayList<ItemScore>();

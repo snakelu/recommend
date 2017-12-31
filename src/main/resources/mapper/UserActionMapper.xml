@@ -16,6 +16,10 @@
 	<select id="selectByUserId" parameterType="java.lang.String" resultMap="userActionMap">
 		select imei,item_id,action_type from rm_user_action where user_id = #{userId}
 	</select>
+	
+	<select id="topItemScore" parameterType="java.lang.Integer" resultType="com.roman.recommend.entity.ItemScore">
+		select item_id itemId from rm_user_action group by item_id order by sum(action_score) desc limit #{size}
+	</select>
 
     <insert id="insert" parameterType="com.roman.recommend.entity.UserAction">
         insert into rm_user_action
