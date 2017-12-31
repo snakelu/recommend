@@ -129,8 +129,13 @@ public class RecommendService {
 	@Transactional
 	public Response<List<ItemScore>> getRecommendByUser(String imei, String userId, int size, String exclude,
 			Integer isExclude) throws Exception {
-		List<ItemScore> recommendList = new ArrayList<ItemScore>();
 		Long imeiId = imeiMapper.select(imei);
+		if (imeiId == null) {
+			// imeiId为空认为是新用户
+			imeiMapper.insert(imei);
+			return new Response<List<ItemScore>>(userActionMapper.topItemScore(size));
+		}
+		List<ItemScore> recommendList = new ArrayList<ItemScore>();
 		if (isExclude == null || isExclude.intValue() == 0) {
 			excludeItemMapper.deleteByImei(imei);
 		}
