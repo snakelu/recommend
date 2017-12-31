@@ -43,7 +43,7 @@ CREATE TABLE `rm_item` (
   `title` varchar(255) NOT NULL DEFAULT '' COMMENT '活动名称',
   `cate_id` varchar(12) NOT NULL DEFAULT '' COMMENT '活动分类',
   `item_tags` varchar(50) DEFAULT '' COMMENT '活动标签',
-  `item_modify_time` datetime DEFAULT NULL COMMENT '活动修改时间',
+  `item_modify_time` bigint(20) DEFAULT NULL COMMENT '活动修改时间',
   PRIMARY KEY (`item_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

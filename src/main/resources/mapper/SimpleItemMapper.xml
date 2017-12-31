@@ -19,7 +19,7 @@
     </insert>
     
     <insert id="batchInsert" parameterType="java.util.List">
-        insert into rm_item
+        insert into rm_simple_item
         (
         	item_id,
         	item_tag,
