@@ -3,6 +3,10 @@
 
 <mapper namespace="com.roman.recommend.mapper.ItemMapper">
 
+	<select id="isExsit" parameterType="java.lang.String" resultType="java.lang.Integer">
+		select count(1) from rm_item where item_id = #{itemId}
+	</select>
+
     <insert id="insert" parameterType="com.roman.recommend.entity.Item">
         insert into rm_item
         (

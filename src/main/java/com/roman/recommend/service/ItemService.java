@@ -70,6 +70,10 @@ public class ItemService {
 
 	@Transactional
 	public Response<Boolean> upload(Item item) {
+		Integer exsit = itemMapper.isExsit(item.getItemId());
+		if (exsit != null && exsit > 0) {
+			update(item);
+		}
 		itemMapper.insert(item);
 		if (StringUtils.isNotBlank(item.getItemTags())) {
 			String[] itemTags = item.getItemTags().split(",");
