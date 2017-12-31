@@ -73,19 +73,20 @@ public class ItemService {
 		Integer exsit = itemMapper.isExsit(item.getItemId());
 		if (exsit != null && exsit > 0) {
 			update(item);
-		}
-		itemMapper.insert(item);
-		if (StringUtils.isNotBlank(item.getItemTags())) {
-			String[] itemTags = item.getItemTags().split(",");
-			List<SimpleItem> simpleItems = new ArrayList<SimpleItem>();
-			for (String itemTag : itemTags) {
-				SimpleItem simpleItem = new SimpleItem();
-				simpleItem.setItemId(item.getItemId());
-				simpleItem.setItemModifyTime(item.getItemModifyTime());
-				simpleItem.setItemTag(itemTag);
-				simpleItems.add(simpleItem);
+		} else {
+			itemMapper.insert(item);
+			if (StringUtils.isNotBlank(item.getItemTags())) {
+				String[] itemTags = item.getItemTags().split(",");
+				List<SimpleItem> simpleItems = new ArrayList<SimpleItem>();
+				for (String itemTag : itemTags) {
+					SimpleItem simpleItem = new SimpleItem();
+					simpleItem.setItemId(item.getItemId());
+					simpleItem.setItemModifyTime(item.getItemModifyTime());
+					simpleItem.setItemTag(itemTag);
+					simpleItems.add(simpleItem);
+				}
+				simpleItemMapper.batchInsert(simpleItems);
 			}
-			simpleItemMapper.batchInsert(simpleItems);
 		}
 		return new Response<Boolean>(true);
 	}
