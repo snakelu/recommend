@@ -109,10 +109,10 @@ public class RecommendService {
 				}
 			}
 		}
-		if (recommendList.size() < size) {
-			// 通过退化搜索补充结果
-			fillRecommendList(imei, recommendList, size, excludeItemIds);
-		}
+		// if (recommendList.size() < size) {
+		// // 通过退化搜索补充结果
+		// fillRecommendList(imei, recommendList, size, excludeItemIds);
+		// }
 		if (!CollectionUtils.isEmpty(recommendList)) {
 			excludeItemMapper.batchInsert(imei, userId, recommendList);
 		}
@@ -166,9 +166,9 @@ public class RecommendService {
 				}
 			}
 		}
-		if (recommendList.size() < size) {
-			fillRecommendList(imei, recommendList, size, excludeItemIds);
-		}
+		// if (recommendList.size() < size) {
+		// fillRecommendList(imei, recommendList, size, excludeItemIds);
+		// }
 		if (!CollectionUtils.isEmpty(recommendList)) {
 			excludeItemMapper.batchInsert(imei, userId, recommendList);
 		}
