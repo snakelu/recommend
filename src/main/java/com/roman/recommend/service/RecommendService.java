@@ -43,6 +43,9 @@ public class RecommendService {
 	@Value("${spring.datasource.host}")
 	private String host;
 
+	@Value("${spring.datasource.dbport}")
+	private int dbport;
+
 	@Value("${spring.datasource.username}")
 	private String username;
 
@@ -166,7 +169,9 @@ public class RecommendService {
 		if (recommendList.size() < size) {
 			fillRecommendList(imei, recommendList, size, excludeItemIds);
 		}
-		excludeItemMapper.batchInsert(imei, userId, recommendList);
+		if (!CollectionUtils.isEmpty(recommendList)) {
+			excludeItemMapper.batchInsert(imei, userId, recommendList);
+		}
 		return new Response<List<ItemScore>>(recommendList);
 	}
 
@@ -285,6 +290,7 @@ public class RecommendService {
 			commonConfigMapper.update(CommonConstants.ADD_ACTION_COUNT_COLUMN, minusCount.toString());
 			MysqlDataSource dataSource = new MysqlDataSource();
 			dataSource.setServerName(host);
+			dataSource.setPort(dbport);
 			dataSource.setUser(username);
 			dataSource.setPassword(password);
 			dataSource.setDatabaseName(databasename);
