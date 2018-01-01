@@ -58,6 +58,7 @@
     <insert id="insert" parameterType="com.roman.recommend.entity.ItemScore">
         insert into rm_item_score
         (
+        	imei_id,
         	imei,
         	user_id,
         	item_id,
@@ -65,6 +66,7 @@
         )
         values
         (
+        	#{imeiId},
         	#{imei},
         	#{userId},
         	#{itemId},
@@ -80,6 +82,7 @@
     <insert id="batchInsert" parameterType="java.util.List">
         insert into rm_item_score
         (
+        	imei_id,
         	imei,
         	user_id,
         	item_id,
@@ -87,7 +90,8 @@
         )
         values
         <foreach collection="userActions" item="v" index="index" separator=",">
-            (#{v.imei},
+            (#{v.imeiId},
+            #{v.imei},
         	#{v.userId},
         	#{v.itemId},
         	#{v.score})

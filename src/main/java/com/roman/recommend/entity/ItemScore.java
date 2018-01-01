@@ -2,6 +2,8 @@ package com.roman.recommend.entity;
 
 public class ItemScore {
 
+	private Long imeiId;
+
 	private String imei;
 
 	private String userId;
@@ -40,5 +42,13 @@ public class ItemScore {
 
 	public void setUserId(String userId) {
 		this.userId = userId;
+	}
+
+	public Long getImeiId() {
+		return imeiId;
+	}
+
+	public void setImeiId(Long imeiId) {
+		this.imeiId = imeiId;
 	}
 }

@@ -69,12 +69,21 @@ public class UserActionService {
 				userMap.put(key, userAction.getUserId());
 			}
 		}
+		List<String> imeiList = new ArrayList<String>();
+		imeiList.addAll(imeiSet);
+		List<String> selectImeis = imeiMapper.selectImeis(imeiList);
+		imeiList.removeAll(selectImeis);
+		if (!CollectionUtils.isEmpty(imeiList)) {
+			imeiMapper.batchInsert(imeiList);
+		}
 		for (Entry<String, Double> entry : itemScoreMap.entrySet()) {
 			String[] keys = entry.getKey().split(",");
 			String userId = userMap.get(entry.getKey());
+			Long imeiId = imeiMapper.select(keys[0]);
 			ItemScore itemScore = itemScoreMapper.select(keys[0], keys[1]);
 			if (itemScore == null) {
 				itemScore = new ItemScore();
+				itemScore.setImeiId(imeiId);
 				itemScore.setImei(keys[0]);
 				itemScore.setUserId(userId);
 				itemScore.setItemId(keys[1]);
@@ -84,13 +93,6 @@ public class UserActionService {
 				itemScore.setScore(entry.getValue());
 				itemScoreMapper.update(itemScore);
 			}
-		}
-		List<String> imeiList = new ArrayList<String>();
-		imeiList.addAll(imeiSet);
-		List<String> selectImeis = imeiMapper.selectImeis(imeiList);
-		imeiList.removeAll(selectImeis);
-		if (!CollectionUtils.isEmpty(imeiList)) {
-			imeiMapper.batchInsert(imeiList);
 		}
 		return new Response<Boolean>(true);
 	}
@@ -105,9 +107,14 @@ public class UserActionService {
 		userActionMapper.insert(userAction);
 		commonConfigMapper.update(CommonConstants.ADD_ACTION_COUNT_COLUMN, "1");
 		String imei = userAction.getImei();
+		Long imeiId = imeiMapper.select(imei);
+		if (imeiId == null) {
+			imeiId = imeiMapper.insert(imei);
+		}
 		ItemScore itemScore = itemScoreMapper.select(imei, userAction.getItemId());
 		if (itemScore == null) {
 			itemScore = new ItemScore();
+			itemScore.setImeiId(imeiId);
 			itemScore.setImei(imei);
 			itemScore.setUserId(userAction.getUserId());
 			itemScore.setItemId(userAction.getItemId());
@@ -116,9 +123,6 @@ public class UserActionService {
 		} else {
 			itemScore.setScore(getActionScore(userAction.getActionType()));
 			itemScoreMapper.update(itemScore);
-		}
-		if (imeiMapper.select(imei) == null) {
-			imeiMapper.insert(imei);
 		}
 		return new Response<Boolean>(true);
 	}

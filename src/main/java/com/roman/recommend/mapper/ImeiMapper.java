@@ -10,7 +10,7 @@ public interface ImeiMapper {
 
 	public List<String> selectImeis(@Param("imeiList") List<String> imeiList);
 
-	public void insert(String imei);
+	public Long insert(String imei);
 
 	public void batchInsert(@Param("imeiList") List<String> imeiList);
 
