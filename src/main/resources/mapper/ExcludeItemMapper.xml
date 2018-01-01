@@ -8,7 +8,7 @@
 	</select>
 	
 	<select id="selectByUserId" parameterType="java.lang.String" resultType="java.lang.String">
-		select item_id from rm_exclude_item where userId = #{userId}
+		select item_id from rm_exclude_item where user_id = #{userId}
 	</select>
 	
 	<insert id="batchInsert" parameterType="java.util.List">

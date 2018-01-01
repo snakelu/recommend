@@ -142,12 +142,24 @@ public class RecommendService {
 		List<String> excludeItemIds = getExcludeItemIds(imei, userId, exclude);
 		List<ItemScore> originRecommendList = UserCfUtil.getRecommend(getDataModel(), imeiId);
 		if (CollectionUtils.isEmpty(excludeItemIds)) {
-			recommendList.addAll(originRecommendList);
+			int endSize = size;
+			if (originRecommendList.size() < size) {
+				endSize = originRecommendList.size();
+			}
+			for (int i = 0; i < endSize; i++) {
+				recommendList.add(originRecommendList.get(i));
+				excludeItemIds.add(originRecommendList.get(i).getItemId());
+			}
 		} else {
+			int endSize = 0;
 			for (ItemScore itemScore : originRecommendList) {
+				if (endSize >= size) {
+					break;
+				}
 				if (!excludeItemIds.contains(itemScore.getItemId())) {
 					recommendList.add(itemScore);
 					excludeItemIds.add(itemScore.getItemId());
+					endSize++;
 				}
 			}
 		}
