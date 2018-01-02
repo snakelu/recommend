@@ -7,8 +7,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.model.jdbc.MySQLJDBCDataModel;
-import org.apache.mahout.cf.taste.model.JDBCDataModel;
+import org.apache.mahout.cf.taste.impl.model.jdbc.ReloadFromJDBCDataModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import org.springframework.util.CollectionUtils;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import com.roman.recommend.entity.ItemScore;
+import com.roman.recommend.entity.UserAction;
 import com.roman.recommend.mapper.CommonConfigMapper;
 import com.roman.recommend.mapper.ExcludeItemMapper;
 import com.roman.recommend.mapper.ImeiMapper;
@@ -39,6 +41,8 @@ import com.roman.recommend.utils.UserCfUtil;
 public class RecommendService {
 
 	private static MySQLJDBCDataModel jdbcDataModel;
+
+	private static ReloadFromJDBCDataModel realModel;
 
 	@Value("${spring.datasource.host}")
 	private String host;
@@ -73,6 +77,9 @@ public class RecommendService {
 	@Autowired
 	private UserActionMapper userActionMapper;
 
+	@Autowired
+	private RedisService redisService;
+
 	/**
 	 * 基于item推荐，通过推荐引擎获取推荐结果，排除已经推荐过的，不够的通过退化搜索补充
 	 * 
@@ -90,7 +97,19 @@ public class RecommendService {
 		if (imeiId == null) {
 			// imeiId为空认为是新用户
 			imeiMapper.insert(imei);
-			return new Response<List<ItemScore>>(userActionMapper.topItemScore(size));
+			redisService.set(imei + "index", size);
+			return new Response<List<ItemScore>>(userActionMapper.topItemScore(0, size));
+		} else {
+			List<UserAction> userActions = userActionMapper.selectByImei(imei);
+			if (CollectionUtils.isEmpty(userActions)) {
+				Integer from = 0;
+				Object object = redisService.get(imei + "index");
+				if (object != null) {
+					from = Integer.valueOf(object.toString());
+				}
+				return new Response<List<ItemScore>>(userActionMapper.topItemScore(from, size));
+			}
+
 		}
 		List<ItemScore> recommendList = new ArrayList<ItemScore>();
 		if (isExclude == null || isExclude.intValue() == 0) {
@@ -114,7 +133,12 @@ public class RecommendService {
 		// fillRecommendList(imei, recommendList, size, excludeItemIds);
 		// }
 		if (!CollectionUtils.isEmpty(recommendList)) {
-			excludeItemMapper.batchInsert(imei, userId, recommendList);
+			for (ItemScore itemScore : recommendList) {
+				redisService.lPush(imei, itemScore.getItemId());
+				if (StringUtils.isNotBlank(userId)) {
+					redisService.lPush(userId, itemScore.getItemId());
+				}
+			}
 		}
 		return new Response<List<ItemScore>>(recommendList);
 	}
@@ -136,7 +160,19 @@ public class RecommendService {
 		if (imeiId == null) {
 			// imeiId为空认为是新用户
 			imeiMapper.insert(imei);
-			return new Response<List<ItemScore>>(userActionMapper.topItemScore(size));
+			redisService.set(imei + "index", size);
+			return new Response<List<ItemScore>>(userActionMapper.topItemScore(0, size));
+		} else {
+			List<UserAction> userActions = userActionMapper.selectByImei(imei);
+			if (CollectionUtils.isEmpty(userActions)) {
+				Integer from = 0;
+				Object object = redisService.get(imei + "index");
+				if (object != null) {
+					from = Integer.valueOf(object.toString());
+				}
+				redisService.set(imei + "index", from + size);
+				return new Response<List<ItemScore>>(userActionMapper.topItemScore(from, size));
+			}
 		}
 		List<ItemScore> recommendList = new ArrayList<ItemScore>();
 		if (isExclude == null || isExclude.intValue() == 0) {
@@ -170,7 +206,13 @@ public class RecommendService {
 		// fillRecommendList(imei, recommendList, size, excludeItemIds);
 		// }
 		if (!CollectionUtils.isEmpty(recommendList)) {
-			excludeItemMapper.batchInsert(imei, userId, recommendList);
+			for (ItemScore itemScore : recommendList) {
+				redisService.lPush(imei, itemScore.getItemId());
+				if (StringUtils.isNotBlank(userId)) {
+					redisService.lPush(userId, itemScore.getItemId());
+				}
+			}
+			// excludeItemMapper.batchInsert(imei, userId, recommendList);
 		}
 		return new Response<List<ItemScore>>(recommendList);
 	}
@@ -270,9 +312,9 @@ public class RecommendService {
 	private List<String> getExcludeItemIds(String imei, String userId, String exclude) {
 		List<String> excludeItemIds = new ArrayList<String>();
 		if (StringUtils.isNotBlank(userId)) {
-			excludeItemIds = excludeItemMapper.selectByUserId(userId);
+			excludeItemIds = redisService.lRangeAll(userId);
 		} else {
-			excludeItemIds = excludeItemMapper.selectByImei(imei);
+			excludeItemIds = redisService.lRangeAll(imei);
 		}
 		if (StringUtils.isNotBlank(exclude)) {
 			String[] excludeIds = exclude.split(",");
@@ -283,7 +325,7 @@ public class RecommendService {
 		return excludeItemIds;
 	}
 
-	private JDBCDataModel getDataModel() {
+	private ReloadFromJDBCDataModel getDataModel() throws TasteException {
 		Integer addActionCount = Integer.valueOf(commonConfigMapper.select(CommonConstants.ADD_ACTION_COUNT_COLUMN));
 		Integer minusCount = -addActionCount;
 		if (jdbcDataModel == null || addActionCount > 100) {// 暂定新增用户行为数量大于100，重新加载用户行为数据
@@ -294,10 +336,13 @@ public class RecommendService {
 			dataSource.setUser(username);
 			dataSource.setPassword(password);
 			dataSource.setDatabaseName(databasename);
-
 			jdbcDataModel = new MySQLJDBCDataModel(dataSource, "rm_item_score", "imei_id", "item_id", "score", null);
 		}
-		return jdbcDataModel;
+		if (realModel == null || addActionCount > 100) {
+			// 利用ReloadFromJDBCDataModel包裹jdbcDataModel,可以把输入加入内存计算，加快计算速度。
+			realModel = new ReloadFromJDBCDataModel(jdbcDataModel);
+		}
+		return realModel;
 	}
 
 	/*
