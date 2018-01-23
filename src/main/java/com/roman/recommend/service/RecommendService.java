@@ -103,7 +103,11 @@ public class RecommendService {
 			// imeiId为空认为是新用户
 			imeiMapper.insert(imei);
 			redisService.set(imei + "index", size);
-			return new Response<List<ItemScore>>(userActionMapper.topItemScore(0, size));
+			if (StringUtils.isBlank(cateid)) {
+				return new Response<List<ItemScore>>(userActionMapper.topItemScore(0, size));
+			} else {
+				return new Response<List<ItemScore>>(userActionMapper.topItemScoreByCateid(cateid, 0, size));
+			}
 		} else {
 			List<UserAction> userActions = userActionMapper.selectByImei(imei);
 			if (CollectionUtils.isEmpty(userActions)) {
@@ -112,7 +116,11 @@ public class RecommendService {
 				if (object != null) {
 					from = Integer.valueOf(object.toString());
 				}
-				return new Response<List<ItemScore>>(userActionMapper.topItemScore(from, size));
+				if (StringUtils.isBlank(cateid)) {
+					return new Response<List<ItemScore>>(userActionMapper.topItemScore(from, size));
+				} else {
+					return new Response<List<ItemScore>>(userActionMapper.topItemScoreByCateid(cateid, from, size));
+				}
 			}
 
 		}

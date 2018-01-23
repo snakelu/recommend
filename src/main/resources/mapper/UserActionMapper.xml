@@ -20,6 +20,12 @@
 	<select id="topItemScore" parameterType="java.lang.Integer" resultType="com.roman.recommend.entity.ItemScore">
 		select item_id itemId from rm_user_action group by item_id order by sum(action_score) desc limit #{from},#{size}
 	</select>
+	
+	<select id="topItemScoreByCateid" parameterType="java.lang.Integer" resultType="com.roman.recommend.entity.ItemScore">
+		select item_id itemId from rm_user_action where item_id in 
+		(select item_id from rm_item where cate_id = #{cateid}) group by item_id 
+		order by sum(action_score) desc limit #{from},#{size}
+	</select>
 
     <insert id="insert" parameterType="com.roman.recommend.entity.UserAction">
         insert into rm_user_action

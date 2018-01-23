@@ -18,5 +18,7 @@ public interface UserActionMapper {
 	public void batchInsert(@Param("userActions") List<UserAction> userActions);
 
 	public List<ItemScore> topItemScore(@Param("from") int from, @Param("size") int size);
+	
+	public List<ItemScore> topItemScoreByCateid(@Param("cateid") String cateid, @Param("from") int from, @Param("size") int size);
 
 }
