@@ -96,8 +96,8 @@ public class RecommendService {
 	 * @throws Exception
 	 */
 	@Transactional
-	public Response<List<ItemScore>> getRecommendByItem(String imei, String userId, int size, String exclude,
-			String cateid, Integer isExclude) throws Exception {
+	public Response<List<ItemScore>> getRecommendByItem(String imei, String userId, int size, String cateid,
+			String exclude, Integer isExclude) throws Exception {
 		Long imeiId = imeiMapper.select(imei);
 		if (imeiId == null) {
 			// imeiId为空认为是新用户
@@ -160,8 +160,8 @@ public class RecommendService {
 	 * @throws Exception
 	 */
 	@Transactional
-	public Response<List<ItemScore>> getRecommendByUser(String imei, String userId, int size, String exclude,
-			String cateid, Integer isExclude) throws Exception {
+	public Response<List<ItemScore>> getRecommendByUser(String imei, String userId, int size, String cateid,
+			String exclude, Integer isExclude) throws Exception {
 		Long imeiId = imeiMapper.select(imei);
 		if (imeiId == null) {
 			// imeiId为空认为是新用户
