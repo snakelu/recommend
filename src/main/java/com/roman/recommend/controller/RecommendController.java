@@ -48,12 +48,13 @@ public class RecommendController {
 			@RequestParam(value = "imei", required = true) String imei,
 			@RequestParam(value = "userId", required = false) String userId,
 			@RequestParam(value = "size", required = false, defaultValue = "5") int size,
+			@RequestParam(value = "cateid", required = false) String cateid,
 			@RequestParam(value = "exclude", required = false) String exclude,
 			@RequestParam(value = "isExclude", required = true) Integer isExclude) throws Exception {
 		if (StringUtils.isBlank(imei)) {
 			return new Response<>(ErrorCode.PARAM_ERROR);
 		}
-		return recommendService.getRecommendByItem(imei, userId, size, exclude, isExclude);
+		return recommendService.getRecommendByItem(imei, userId, size, cateid, exclude, isExclude);
 	}
 
 	/**
@@ -74,12 +75,13 @@ public class RecommendController {
 			@RequestParam(value = "imei", required = true) String imei,
 			@RequestParam(value = "userId", required = false) String userId,
 			@RequestParam(value = "size", required = false, defaultValue = "5") int size,
+			@RequestParam(value = "cateid", required = false) String cateid,
 			@RequestParam(value = "exclude", required = false) String exclude,
 			@RequestParam(value = "isExclude", required = true) Integer isExclude) throws Exception {
 		if (StringUtils.isBlank(imei)) {
 			return new Response<>(ErrorCode.PARAM_ERROR);
 		}
-		return recommendService.getRecommendByUser(imei, userId, size, exclude, isExclude);
+		return recommendService.getRecommendByUser(imei, userId, size, cateid, exclude, isExclude);
 	}
 
 	/**

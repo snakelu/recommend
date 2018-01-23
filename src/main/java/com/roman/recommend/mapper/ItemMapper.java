@@ -9,6 +9,8 @@ import com.roman.recommend.entity.Item;
 public interface ItemMapper {
 
 	public Integer isExsit(String itemId);
+	
+	public String selectCateId(String itemId);
 
 	public void insert(Item item);
 

@@ -22,6 +22,7 @@ import com.roman.recommend.entity.UserAction;
 import com.roman.recommend.mapper.CommonConfigMapper;
 import com.roman.recommend.mapper.ExcludeItemMapper;
 import com.roman.recommend.mapper.ImeiMapper;
+import com.roman.recommend.mapper.ItemMapper;
 import com.roman.recommend.mapper.ItemScoreMapper;
 import com.roman.recommend.mapper.SimpleItemMapper;
 import com.roman.recommend.mapper.UserActionMapper;
@@ -64,6 +65,9 @@ public class RecommendService {
 
 	@Autowired
 	private SimpleItemMapper simpleItemMapper;
+	
+	@Autowired
+	private ItemMapper itemMapper;
 
 	@Autowired
 	private ImeiMapper imeiMapper;
@@ -87,12 +91,13 @@ public class RecommendService {
 	 * @param userId
 	 * @param size
 	 * @param exclude
+	 * @param cateid 
 	 * @return 推荐结果
 	 * @throws Exception
 	 */
 	@Transactional
 	public Response<List<ItemScore>> getRecommendByItem(String imei, String userId, int size, String exclude,
-			Integer isExclude) throws Exception {
+			String cateid, Integer isExclude) throws Exception {
 		Long imeiId = imeiMapper.select(imei);
 		if (imeiId == null) {
 			// imeiId为空认为是新用户
@@ -118,16 +123,7 @@ public class RecommendService {
 		// 需要排除的itemId
 		List<String> excludeItemIds = getExcludeItemIds(imei, userId, exclude);
 		List<ItemScore> originRecommendList = ItemCfUtil.getRecommend(getDataModel(), imeiId);
-		if (CollectionUtils.isEmpty(excludeItemIds)) {
-			recommendList.addAll(originRecommendList);
-		} else {
-			for (ItemScore itemScore : originRecommendList) {
-				if (!excludeItemIds.contains(itemScore.getItemId())) {
-					recommendList.add(itemScore);
-					excludeItemIds.add(itemScore.getItemId());
-				}
-			}
-		}
+		filterList(size, recommendList, excludeItemIds, originRecommendList, cateid);
 		// if (recommendList.size() < size) {
 		// // 通过退化搜索补充结果
 		// fillRecommendList(imei, recommendList, size, excludeItemIds);
@@ -150,12 +146,13 @@ public class RecommendService {
 	 * @param userId
 	 * @param size
 	 * @param exclude
+	 * @param cateid 
 	 * @return 推荐结果
 	 * @throws Exception
 	 */
 	@Transactional
 	public Response<List<ItemScore>> getRecommendByUser(String imei, String userId, int size, String exclude,
-			Integer isExclude) throws Exception {
+			String cateid, Integer isExclude) throws Exception {
 		Long imeiId = imeiMapper.select(imei);
 		if (imeiId == null) {
 			// imeiId为空认为是新用户
@@ -180,28 +177,7 @@ public class RecommendService {
 		}
 		List<String> excludeItemIds = getExcludeItemIds(imei, userId, exclude);
 		List<ItemScore> originRecommendList = UserCfUtil.getRecommend(getDataModel(), imeiId);
-		if (CollectionUtils.isEmpty(excludeItemIds)) {
-			int endSize = size;
-			if (originRecommendList.size() < size) {
-				endSize = originRecommendList.size();
-			}
-			for (int i = 0; i < endSize; i++) {
-				recommendList.add(originRecommendList.get(i));
-				excludeItemIds.add(originRecommendList.get(i).getItemId());
-			}
-		} else {
-			int endSize = 0;
-			for (ItemScore itemScore : originRecommendList) {
-				if (endSize >= size) {
-					break;
-				}
-				if (!excludeItemIds.contains(itemScore.getItemId())) {
-					recommendList.add(itemScore);
-					excludeItemIds.add(itemScore.getItemId());
-					endSize++;
-				}
-			}
-		}
+		filterList(size, recommendList, excludeItemIds, originRecommendList,cateid);
 		// if (recommendList.size() < size) {
 		// fillRecommendList(imei, recommendList, size, excludeItemIds);
 		// }
@@ -215,6 +191,60 @@ public class RecommendService {
 			// excludeItemMapper.batchInsert(imei, userId, recommendList);
 		}
 		return new Response<List<ItemScore>>(recommendList);
+	}
+
+	private void filterList(int size, List<ItemScore> recommendList, List<String> excludeItemIds,
+			List<ItemScore> originRecommendList,String cateid) {
+		if (CollectionUtils.isEmpty(excludeItemIds)) {
+			int endSize = size;
+			if (originRecommendList.size() < size) {
+				endSize = originRecommendList.size();
+			}
+			for (int i = 0; i < endSize; i++) {
+				String itemId = originRecommendList.get(i).getItemId();
+				if (StringUtils.isNotBlank(cateid)) {
+					String cateId = null;
+					Object obj = redisService.get(itemId);
+					if (obj == null) {
+						cateId = itemMapper.selectCateId(itemId);
+						redisService.set(itemId, cateId);
+					} else {
+						cateId = obj.toString();
+					}
+					if (!cateid.equals(cateId)) {
+						continue;
+					}
+				}
+				recommendList.add(originRecommendList.get(i));
+				excludeItemIds.add(itemId);
+			}
+		} else {
+			int endSize = 0;
+			for (ItemScore itemScore : originRecommendList) {
+				if (endSize >= size) {
+					break;
+				}
+				String itemId = itemScore.getItemId();
+				if (!excludeItemIds.contains(itemId)) {
+					if (StringUtils.isNotBlank(cateid)) {
+						String cateId = null;
+						Object obj = redisService.get(itemId);
+						if (obj == null) {
+							cateId = itemMapper.selectCateId(itemId);
+							redisService.set(itemId, cateId);
+						} else {
+							cateId = obj.toString();
+						}
+						if (!cateid.equals(cateId)) {
+							continue;
+						}
+					}
+					recommendList.add(itemScore);
+					excludeItemIds.add(itemId);
+					endSize++;
+				}
+			}
+		}
 	}
 
 	public Response<List<ItemScore>> getRecommendByUser1(String imei, String userId, int size, String exclude) {
